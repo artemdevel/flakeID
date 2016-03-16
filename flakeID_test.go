@@ -3,6 +3,7 @@ package flakeID
 import (
 	"testing"
 	"time"
+	//"log"
 )
 
 const (
@@ -120,5 +121,17 @@ func TestHostFlakeParse(t *testing.T) {
 
 	if flakeCounter2 != 3 {
 		t.Error("Counter parsing failed", id1)
+	}
+}
+
+func TestConvertTo(t *testing.T) {
+	flake := NewRandomFlake(time.Time{})
+	_ = flake.Next()
+	hex, err := flake.ConvertTo(randomFlakeID, "hex")
+	if err != nil {
+		t.Error("Failed to convert to 'hex'")
+	}
+	if hex != "3b8ab896b52f9d85" {
+		t.Error("Failed to convert to 'hex'", hex)
 	}
 }

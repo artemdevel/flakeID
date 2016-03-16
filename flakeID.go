@@ -2,6 +2,7 @@
 package flakeID
 
 import (
+	"fmt"
 	"math/rand"
 	"sync"
 	"time"
@@ -20,18 +21,32 @@ var (
 	_rand        *rand.Rand
 )
 
-// Flaker interface represents set of methods for flake ID generators.
+// Flaker interface defines set of methods for flake ID generators.
 type Flaker interface {
 	Next() uint64
 	// Parse returns time when ID was generated, host ID and counter or random bits.
 	// For RandomFlake generator host ID is always 0.
 	Parse(flakeID uint64) (time.Time, uint32, uint32)
+	// Helper methods to convert flake IDs into/from different string representations.
+	ConvertTo(flakeID uint64, to string) (string, error)
+	ConvertFrom(s string, from string) (uint64, error)
 }
 
 // RandomFlake represents a structure which is used to generate an ID as time delta between
 // the initial epoch time and current time + some random value.
 type RandomFlake struct {
 	epochTime time.Time
+	value     uint64
+}
+
+// HostFlake represents a structure which is used to generate an ID as time delta between
+// the initial epoch time + some host ID + counter value. Counter value is reset to 0 each millisecond.
+type HostFlake struct {
+	epochTime time.Time
+	lock      sync.Mutex
+	timeDelta uint64
+	hostID    uint32
+	counter   uint16
 	value     uint64
 }
 
@@ -55,15 +70,20 @@ func (rf *RandomFlake) Parse(flakeID uint64) (flakeTime time.Time, _ uint32, ran
 	return
 }
 
-// HostFlake represents a structure which is used to generate an ID as time delta between
-// the initial epoch time + some host ID + counter value. Counter value is reset to 0 each millisecond.
-type HostFlake struct {
-	epochTime time.Time
-	lock      sync.Mutex
-	timeDelta uint64
-	hostID    uint32
-	counter   uint16
-	value     uint64
+// ConvertTo implementation of Flaker interface for RandomFlake.
+func (rf *RandomFlake) ConvertTo(flakeID uint64, to string) (string, error) {
+	if flakeID == 0 {
+		flakeID = rf.value
+	}
+	return convertTo(flakeID, to)
+}
+
+// ConvertFrom implementation of Flaker interface for RandomFlake.
+func (rf *RandomFlake) ConvertFrom(s string, from string) (uint64, error) {
+	if s == "" {
+		return 0, fmt.Errorf("Noting to convert.")
+	}
+	return convertFrom(s, from)
 }
 
 // Next implements Flaker interface for RandomFlake.
@@ -97,6 +117,22 @@ func (hf *HostFlake) Parse(flakeID uint64) (flakeTime time.Time, hostID uint32, 
 	return
 }
 
+// ConvertTo implementation of Flaker interface for HostFlake.
+func (hf *HostFlake) ConvertTo(flakeID uint64, to string) (string, error) {
+	if flakeID == 0 {
+		flakeID = hf.value
+	}
+	return convertTo(flakeID, to)
+}
+
+// ConvertFrom implementation of Flaker interface for HostFlake.
+func (hf *HostFlake) ConvertFrom(s string, from string) (uint64, error) {
+	if s == "" {
+		return 0, fmt.Errorf("Noting to convert.")
+	}
+	return convertFrom(s, from)
+}
+
 func init() {
 	_rand = rand.New(rand.NewSource(time.Now().UnixNano()))
 }
@@ -122,4 +158,36 @@ func NewHostFlake(hostID uint32, epoch time.Time) Flaker {
 	}
 	flake.hostID = hostID
 	return &flake
+}
+
+
+// Helper conversion functions.
+func convertTo(flakeID uint64, to string) (string, error) {
+	switch to {
+	case "hex":
+		return fmt.Sprintf("%x", flakeID), nil
+	case "base64":
+		return "", nil
+	case "base58":
+		return "", nil
+	case "base32":
+		return "", nil
+	default:
+		return "", fmt.Errorf("Unsupported conversion to '%s'.", to)
+	}
+}
+
+func convertFrom(s string, from string) (uint64, error) {
+	switch from {
+	case "hex":
+		return 0, nil
+	case "base64":
+		return 0, nil
+	case "base58":
+		return 0, nil
+	case "base32":
+		return 0, nil
+	default:
+		return 0, fmt.Errorf("Unsupported conversion from '%s'.", from)
+	}
 }
