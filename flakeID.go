@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"math/rand"
 	"strconv"
-	"strings"
 	"sync"
 	"time"
 )
@@ -173,14 +172,7 @@ func convertTo(flakeID uint64, to string) (string, error) {
 	case "hex":
 		return fmt.Sprintf("%x", flakeID), nil
 	case "base64":
-		// also strip padding
-		return strings.Replace(base64.StdEncoding.EncodeToString(b), "=", "", -1), nil
-	case "base62":
-		return "", nil
-	case "base58":
-		return "", nil
-	case "base32":
-		return "", nil
+		return base64.RawStdEncoding.EncodeToString(b), nil
 	default:
 		return "", fmt.Errorf("Unsupported conversion to '%s'.", to)
 	}
@@ -191,23 +183,11 @@ func convertFrom(s string, from string) (uint64, error) {
 	case "hex":
 		return strconv.ParseUint(s, 16, 64)
 	case "base64":
-		// add padding
-		if len(s) % 3 == 1 {
-			s += "=="
-		} else if len(s) % 3 == 2 {
-			s += "="
-		}
-		if b, err := base64.StdEncoding.DecodeString(s); err != nil {
+		if b, err := base64.RawStdEncoding.DecodeString(s); err != nil {
 			return 0, err
 		} else {
 			return binary.BigEndian.Uint64(b), nil
 		}
-	case "base62":
-		return 0, nil
-	case "base58":
-		return 0, nil
-	case "base32":
-		return 0, nil
 	default:
 		return 0, fmt.Errorf("Unsupported conversion from '%s'.", from)
 	}
