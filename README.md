@@ -13,3 +13,6 @@ License
 -------
 
 flakeID is available under the [Apache License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0.html).
+
+### Build status
+[![Build Status](https://travis-ci.org/artemdevel/flakeID.svg)](https://travis-ci.org/artemdevel/flakeID)
