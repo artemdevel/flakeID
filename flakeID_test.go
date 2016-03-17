@@ -126,12 +126,14 @@ func TestHostFlakeParse(t *testing.T) {
 
 func TestConvertTo(t *testing.T) {
 	flake := NewRandomFlake(time.Time{})
-	_ = flake.Next()
-	hex, err := flake.ConvertTo(randomFlakeID, "hex")
-	if err != nil {
-		t.Error("Failed to convert to 'hex'")
+
+	if _, err := flake.ConvertTo(0, "hex"); err == nil {
+		t.Error("Failed to convert to 'hex', expect error.")
 	}
-	if hex != "3b8ab896b52f9d85" {
+
+	if hex, err := flake.ConvertTo(randomFlakeID, "hex"); err != nil {
+		t.Error("Failed to convert to 'hex'")
+	} else if hex != "3b8ab896b52f9d85" {
 		t.Error("Failed to convert to 'hex'", hex)
 	}
 }

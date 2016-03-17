@@ -73,7 +73,7 @@ func (rf *RandomFlake) Parse(flakeID uint64) (flakeTime time.Time, _ uint32, ran
 // ConvertTo implementation of Flaker interface for RandomFlake.
 func (rf *RandomFlake) ConvertTo(flakeID uint64, to string) (string, error) {
 	if flakeID == 0 {
-		flakeID = rf.value
+		return "", fmt.Errorf("Noting to convert.")
 	}
 	return convertTo(flakeID, to)
 }
@@ -120,7 +120,7 @@ func (hf *HostFlake) Parse(flakeID uint64) (flakeTime time.Time, hostID uint32, 
 // ConvertTo implementation of Flaker interface for HostFlake.
 func (hf *HostFlake) ConvertTo(flakeID uint64, to string) (string, error) {
 	if flakeID == 0 {
-		flakeID = hf.value
+		return "", fmt.Errorf("Noting to convert.")
 	}
 	return convertTo(flakeID, to)
 }
@@ -168,6 +168,8 @@ func convertTo(flakeID uint64, to string) (string, error) {
 		return fmt.Sprintf("%x", flakeID), nil
 	case "base64":
 		return "", nil
+	case "base62":
+		return "", nil
 	case "base58":
 		return "", nil
 	case "base32":
@@ -182,6 +184,8 @@ func convertFrom(s string, from string) (uint64, error) {
 	case "hex":
 		return 0, nil
 	case "base64":
+		return 0, nil
+	case "base62":
 		return 0, nil
 	case "base58":
 		return 0, nil
