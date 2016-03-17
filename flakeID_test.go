@@ -3,13 +3,14 @@ package flakeID
 import (
 	"testing"
 	"time"
-	//"log"
 )
 
 const (
 	hostID        = 789
-	randomFlakeID = 4290444552448220549
 	hostFlakeID   = 4290444760684712963
+	randomFlakeID = 4290444552448220549
+	randomFlakeIDHex = "3b8ab896b52f9d85"
+	randomFlakeIDBase64 = "O4q4lrUvnYU"
 )
 
 func TestRandomFlakeCreation(t *testing.T) {
@@ -128,12 +129,44 @@ func TestConvertTo(t *testing.T) {
 	flake := NewRandomFlake(time.Time{})
 
 	if _, err := flake.ConvertTo(0, "hex"); err == nil {
-		t.Error("Failed to convert to 'hex', expect error.")
+		t.Error("Failed to convert to hex string, expect error.")
+	}
+	if _, err := flake.ConvertTo(randomFlakeID, "unsupported"); err == nil {
+		t.Error("Failed to convert to unsupported string, expect error.")
 	}
 
 	if hex, err := flake.ConvertTo(randomFlakeID, "hex"); err != nil {
-		t.Error("Failed to convert to 'hex'")
-	} else if hex != "3b8ab896b52f9d85" {
-		t.Error("Failed to convert to 'hex'", hex)
+		t.Error("Failed to convert to hex string", err)
+	} else if hex != randomFlakeIDHex {
+		t.Error("Failed to convert to hex string", hex)
+	}
+
+	if b64, err := flake.ConvertTo(randomFlakeID, "base64"); err != nil {
+		t.Error("Failed to convert to base64 string", err)
+	} else if b64 != randomFlakeIDBase64 {
+		t.Error("Failed to convert to base64 string", b64)
+	}
+}
+
+func TestConvertFrom(t *testing.T) {
+	flake := NewRandomFlake(time.Time{})
+
+	if _, err := flake.ConvertFrom("", "hex"); err == nil {
+		t.Error("Failed to convert from hex string, expect error.")
+	}
+	if _, err := flake.ConvertFrom("unsupported", "unsupported"); err == nil {
+		t.Error("Failed to convert from unsupported string, expect error.")
+	}
+
+	if id, err := flake.ConvertFrom(randomFlakeIDHex, "hex"); err != nil {
+		t.Error("Failed to convert from hex string", err)
+	} else if id != randomFlakeID {
+		t.Error("Failed to convert to hex string", id)
+	}
+
+	if id, err := flake.ConvertFrom(randomFlakeIDBase64, "base64"); err != nil {
+		t.Error("Failed to convert from base64 string", err)
+	} else if id != randomFlakeID {
+		t.Error("Failed to convert to base64 string", id)
 	}
 }

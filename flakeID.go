@@ -2,8 +2,12 @@
 package flakeID
 
 import (
+	"encoding/base64"
+	"encoding/binary"
 	"fmt"
 	"math/rand"
+	"strconv"
+	"strings"
 	"sync"
 	"time"
 )
@@ -163,11 +167,14 @@ func NewHostFlake(hostID uint32, epoch time.Time) Flaker {
 
 // Helper conversion functions.
 func convertTo(flakeID uint64, to string) (string, error) {
+	b := make([]byte, 8)
+	binary.BigEndian.PutUint64(b, flakeID)
 	switch to {
 	case "hex":
 		return fmt.Sprintf("%x", flakeID), nil
 	case "base64":
-		return "", nil
+		// also strip padding
+		return strings.Replace(base64.StdEncoding.EncodeToString(b), "=", "", -1), nil
 	case "base62":
 		return "", nil
 	case "base58":
@@ -182,9 +189,19 @@ func convertTo(flakeID uint64, to string) (string, error) {
 func convertFrom(s string, from string) (uint64, error) {
 	switch from {
 	case "hex":
-		return 0, nil
+		return strconv.ParseUint(s, 16, 64)
 	case "base64":
-		return 0, nil
+		// add padding
+		if len(s) % 3 == 1 {
+			s += "=="
+		} else if len(s) % 3 == 2 {
+			s += "="
+		}
+		if b, err := base64.StdEncoding.DecodeString(s); err != nil {
+			return 0, err
+		} else {
+			return binary.BigEndian.Uint64(b), nil
+		}
 	case "base62":
 		return 0, nil
 	case "base58":
